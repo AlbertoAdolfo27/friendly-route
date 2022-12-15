@@ -1,0 +1,20 @@
+{
+    "name": "albertoadolfo27/friendly_route",
+    "description": "PHP Library to create HTTP routes",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "FriendlyRoute\\": "FriendlyRoute/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alberto Jordane adolfo",
+            "email": "albertoadolfo27@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    }
+}
