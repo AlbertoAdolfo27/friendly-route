@@ -13,7 +13,7 @@ PHP Library to create HTTP routes
 installation using [composer](https://getcomposer.org/)
 
 ```compose
-composer require albertoadolfo27/friendly-route
+composer require albertoadolfo27/friendly_route
 ````
 
 ### Quick Examples
