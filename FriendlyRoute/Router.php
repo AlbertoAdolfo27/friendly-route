@@ -60,7 +60,6 @@ class Router
         $argValues = preg_replace("/^\//","", $argValues);
         $argValues = explode("/", $argValues);
 
-
         $args = array();
         if(count($argsKeys) == count($argsKeys))
         {
@@ -84,7 +83,6 @@ class Router
     // VERIFY IF IS VALID REQUEST URI
     private function isValidRequestUri(string $urlPattern, string $method) : bool
     {
-        
         if($this->matchUrlPattern($urlPattern) && !$this->status["FOUND"])
         {
             if(strtoupper($method) == $_SERVER["REQUEST_METHOD"])
