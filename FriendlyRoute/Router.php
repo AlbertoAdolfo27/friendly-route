@@ -1,5 +1,7 @@
 <?php
+
 namespace FriendlyRoute;
+
 class Router
 {
     protected $routes;
@@ -24,24 +26,22 @@ class Router
         $methodNotAllowedCallback = null;
         $this->setConfig($config);
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // SET ROUTER CONFIGURATIONS
     private function setConfig(array $config)
     {
-        if(isset($config["projectDir"]))
-        {
-            $this->config["projectDir"] = "/".$config["projectDir"];
-        }
-        if(isset($config["debug"]))
-        {
+        if (isset($config["projectDir"])) :
+            $this->config["projectDir"] = "/" . $config["projectDir"];
+        endif;
+        if (isset($config["debug"])) :
             $this->config["debug"] = $config["debug"];
-        }
+        endif;
     }
 
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
     // GET REQUEST URI ARGS
-    private function getRequestUriArgs(string $urlPattern, string $requestUri) : array
+    private function getRequestUriArgs(string $urlPattern, string $requestUri): array
     {
         preg_match_all(self::ARG_PATTERN, $urlPattern, $argsKeys);
         $argsKeys = $argsKeys[0];
@@ -49,59 +49,53 @@ class Router
         $urlPatterSplited = preg_split(self::ARG_PATTERN, $urlPattern);
         $argValues = $requestUri;;
 
-        foreach ($urlPatterSplited as $value)
-        {
-           if(!empty($value))
-           {
+        foreach ($urlPatterSplited as $value) :
+            if (!empty($value)) :
                 $value = preg_replace("/\//i", "(\/){1}", $value);
-                $argValues = preg_replace("/{$value}/","/", $argValues);
-           }
-        }
-        $argValues = preg_replace("/^\//","", $argValues);
+                $argValues = preg_replace("/{$value}/", "/", $argValues);
+            endif;
+        endforeach;
+        $argValues = preg_replace("/^\//", "", $argValues);
         $argValues = explode("/", $argValues);
 
         $args = array();
-        if(count($argsKeys) == count($argsKeys))
-        {
-            foreach ($argsKeys as $key => $argsKey)
-            {
+        if (count($argsKeys) == count($argsKeys)) :
+            foreach ($argsKeys as $key => $argsKey) :
                 $argsKey = preg_replace("/{|}/", "", $argsKey);
                 $args[$argsKey] = $argValues[$key];
-            }
-        }
+            endforeach;
+        endif;
         return $args;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // GET REQUEST URI
-    private function getRequestUri() : string
+    private function getRequestUri(): string
     {
         return parse_url(str_replace($this->config["projectDir"], "", $_SERVER["REQUEST_URI"]), PHP_URL_PATH);
     }
 
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
     // VERIFY IF IS VALID REQUEST URI
-    private function isValidRequestUri(string $urlPattern, string $method) : bool
+    private function isValidRequestUri(string $urlPattern, string $method): bool
     {
-        if($this->matchUrlPattern($urlPattern) && !$this->status["FOUND"])
-        {
-            if(strtoupper($method) == $_SERVER["REQUEST_METHOD"])
-            {
+        if ($this->matchUrlPattern($urlPattern) && !$this->status["FOUND"]) :
+            if (strtoupper($method) == $_SERVER["REQUEST_METHOD"]) :
                 $this->status["FOUND"] = true;
                 $this->status["NOT_FOUND"] = false;
                 return true;
-            }
-        }
+            endif;
+        endif;
         return false;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // MATCH URL PATTERN
-    private function matchUrlPattern(string $urlPattern) : bool
+    private function matchUrlPattern(string $urlPattern): bool
     {
         $urlPattern = strtolower($urlPattern);
         $requestUri  = $this->getRequestUri();
-        
+
         $replacePatterns = array(
             self::ARG_PATTERN,
             "/\//i"
@@ -111,11 +105,11 @@ class Router
             "(\/){1}"
         );
 
-        $validRequestUriPattern  = "/^". preg_replace($replacePatterns, $replacement, $urlPattern) ."$/i";
+        $validRequestUriPattern  = "/^" . preg_replace($replacePatterns, $replacement, $urlPattern) . "$/i";
         return preg_match($validRequestUriPattern, $requestUri) && (substr_count($urlPattern, "/") == substr_count($requestUri, "/"));
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // SET ROUTE
     private function setRoute(string $urlPattern, string $method)
     {
@@ -124,123 +118,119 @@ class Router
             "urlPattern" => $urlPattern
         );
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // CALLBACK REQUEST NOT FOUND
     public function notFound(callable|null $callback)
     {
-        if($this->status["NOT_FOUND"] && is_callable($this->notFoundCallback) && (!$this->status["METHOD_NOT_ALLOWED"] || ($this->status["METHOD_NOT_ALLOWED"] && !is_callable($this->methodNotAllowedCallback))))
-        {
+        if ($this->status["NOT_FOUND"] && is_callable($this->notFoundCallback) && (!$this->status["METHOD_NOT_ALLOWED"] || ($this->status["METHOD_NOT_ALLOWED"] && !is_callable($this->methodNotAllowedCallback)))) :
+            http_response_code(404);
             $callback();
-            
-        }elseif($this->config["debug"] && $this->status["NOT_FOUND"] && !is_callable($callback) && (!$this->status["METHOD_NOT_ALLOWED"]))
-        {
-            var_dump("DEBUG: NOT FOUND");
-        }
+        elseif ($this->config["debug"] && $this->status["NOT_FOUND"] && !is_callable($callback) && (!$this->status["METHOD_NOT_ALLOWED"])) :
+            http_response_code(404);
+            echo "DEBUG: NOT FOUND";
+        endif;
         $this->notFoundCallback = $callback;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // CALLBACK REQUEST METHOD NOT ALLOWED
     public function methodNotAllowed(callable|null $callback)
     {
 
-        if($this->status["METHOD_NOT_ALLOWED"] && is_callable($this->methodNotAllowedCallback))
-        {
+        if ($this->status["METHOD_NOT_ALLOWED"] && is_callable($this->methodNotAllowedCallback)) :
             $methodsAllowed = $this->getMethodsAllowed();
             $callback($methodsAllowed);
-        } elseif($this->config["debug"] && $this->status["METHOD_NOT_ALLOWED"] && ! is_callable($this->methodNotAllowedCallback))
-        {
-            var_dump("DEBUG: METHOD NOT ALLOWED");
+        elseif ($this->config["debug"] && $this->status["METHOD_NOT_ALLOWED"] && !is_callable($this->methodNotAllowedCallback)) :
+            http_response_code(405);
+            echo "DEBUG: METHOD NOT ALLOWED<br>";
+            echo "ALLOWED METHOD<br>";
             print_r($this->getMethodsAllowed());
-        }
+        endif;
         $this->methodNotAllowedCallback = $callback;
     }
 
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
     // SET METHOD ALLOWED
     private function setMethodAllowed()
     {
-        if($this->status["NOT_FOUND"])
-        {
-            foreach($this->routes as $route)
-            {
-                if($this->matchUrlPattern($route["urlPattern"]))
-                {
+        if (!is_object($this->routes) and !is_array($this->routes)) :
+            $this->routes = array();
+        endif;
+        if ($this->status["NOT_FOUND"]) :
+            foreach ($this->routes as $route) :
+                if ($this->matchUrlPattern($route["urlPattern"])) :
+                    http_response_code(405);
                     $this->status["METHOD_NOT_ALLOWED"] =  true;
                     $this->methodsAllowed[] = $route["method"];
-                }
-            }
-        }
+                endif;
+            endforeach;
+        endif;
     }
 
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
     // GET METHOD ALLOWED
-    private function getMethodsAllowed() : array
+    private function getMethodsAllowed(): array
     {
         return $this->methodsAllowed;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // GET REQUEST
     public function get(string $urlPattern, callable|null $callback)
     {
         $this->setRequest("GET", $urlPattern, $callback);
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // POST REQUEST
     public function post(string $urlPattern, callable|null $callback)
     {
         $this->setRequest("POST", $urlPattern, $callback);
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // PUT REQUEST
     public function put(string $urlPattern, callable|null $callback)
     {
         $this->setRequest("PUT", $urlPattern, $callback);
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // DELETE REQUEST
     public function delete(string $urlPattern, callable|null $callback)
     {
         $this->setRequest("DELETE", $urlPattern, $callback);
     }
 
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
     // SET REQUEST METHOD
     public function set(string|array $method, string $urlPattern, callable|null $callback)
     {
-        if(is_array($method))
-        {
-            foreach($method as $value)
-            {
+        if (is_array($method)) :
+            foreach ($method as $value) :
                 $this->setRequest($value, $urlPattern, $callback);
-            }   
-        }   else
-        {
+            endforeach;
+        else :
             $this->setRequest($method, $urlPattern, $callback);
-        }
+        endif;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // SET REQUEST
     private function setRequest(string $method, string $urlPattern, callable|null $callback)
     {
         $this->setRoute($urlPattern, strtoupper($method));
-        
-        if($this->isValidRequestUri($urlPattern, strtoupper($method)))
-        {
+
+        if ($this->isValidRequestUri($urlPattern, strtoupper($method))) :
             $requestUri = $this->getRequestUri();
             $args = $this->getRequestUriArgs($urlPattern, $requestUri);
             $params = array();
             $callback($args, $params);
-        }
+        endif;
     }
-    
-    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------------------------------
     // RUN ROUTER
     public function run()
     {
