@@ -15,7 +15,7 @@ class Router
         "METHOD_NOT_ALLOWED" => false,
     );
     protected $config = array(
-        "projectDir" => "",
+        "projectDir" => "/",
         "debug" => true
     );
 
@@ -32,7 +32,10 @@ class Router
     private function setConfig(array $config)
     {
         if (isset($config["projectDir"])) :
-            $this->config["projectDir"] = "/" . $config["projectDir"];
+            if(strpos($config["projectDir"], "/") == 0):
+                $config["projectDir"] = str_replace("/", "", $config["projectDir"]);
+            endif;
+            $this->config["projectDir"] .= $config["projectDir"];
         endif;
         if (isset($config["debug"])) :
             $this->config["debug"] = $config["debug"];
