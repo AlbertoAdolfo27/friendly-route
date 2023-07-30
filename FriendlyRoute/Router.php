@@ -15,7 +15,7 @@ class Router
         "METHOD_NOT_ALLOWED" => false,
     );
     protected $config = array(
-        "projectDir" => "/",
+        "projectDir" => "",
         "debug" => true
     );
 
@@ -32,10 +32,11 @@ class Router
     private function setConfig(array $config)
     {
         if (isset($config["projectDir"])) :
-            if(strpos($config["projectDir"], "/") == 0):
-                $config["projectDir"] = str_replace("/", "", $config["projectDir"]);
+            $this->config["projectDir"] = "/" . $config["projectDir"];
+            $this->config["projectDir"] = preg_replace("/\/\//", "/", $this->config["projectDir"]);
+            if( $this->config["projectDir"] == "/"):
+                $this->config["projectDir"] = "";
             endif;
-            $this->config["projectDir"] .= $config["projectDir"];
         endif;
         if (isset($config["debug"])) :
             $this->config["debug"] = $config["debug"];
@@ -140,7 +141,6 @@ class Router
     // CALLBACK REQUEST METHOD NOT ALLOWED
     public function methodNotAllowed(callable|null $callback)
     {
-
         if ($this->status["METHOD_NOT_ALLOWED"] && is_callable($this->methodNotAllowedCallback)) :
             $methodsAllowed = $this->getMethodsAllowed();
             $callback($methodsAllowed);
