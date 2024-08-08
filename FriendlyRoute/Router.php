@@ -21,9 +21,9 @@ class Router
 
     public function __construct(array $config  = array())
     {
-        $routes = array();
-        $notFoundCallback = null;
-        $methodNotAllowedCallback = null;
+        $this->routes = array();
+        $this->notFoundCallback = null;
+        $this->methodNotAllowedCallback = null;
         $this->setConfig($config);
     }
 
@@ -34,7 +34,7 @@ class Router
         if (isset($config["projectDir"])) :
             $this->config["projectDir"] = "/" . $config["projectDir"];
             $this->config["projectDir"] = preg_replace("/\/\//", "/", $this->config["projectDir"]);
-            if( $this->config["projectDir"] == "/"):
+            if ($this->config["projectDir"] == "/") :
                 $this->config["projectDir"] = "";
             endif;
         endif;
@@ -180,28 +180,28 @@ class Router
 
     // ------------------------------------------------------------------------------------------------
     // GET REQUEST
-    public function get(string $urlPattern, callable|null $callback)
+    public function get(string | array $urlPattern, callable|null $callback)
     {
         $this->setRequest("GET", $urlPattern, $callback);
     }
 
     // ------------------------------------------------------------------------------------------------
     // POST REQUEST
-    public function post(string $urlPattern, callable|null $callback)
+    public function post(string | array $urlPattern, callable|null $callback)
     {
         $this->setRequest("POST", $urlPattern, $callback);
     }
 
     // ------------------------------------------------------------------------------------------------
     // PUT REQUEST
-    public function put(string $urlPattern, callable|null $callback)
+    public function put(string | array $urlPattern, callable|null $callback)
     {
         $this->setRequest("PUT", $urlPattern, $callback);
     }
 
     // ------------------------------------------------------------------------------------------------
     // DELETE REQUEST
-    public function delete(string $urlPattern, callable|null $callback)
+    public function delete(string | array $urlPattern, callable|null $callback)
     {
         $this->setRequest("DELETE", $urlPattern, $callback);
     }
@@ -221,16 +221,23 @@ class Router
 
     // ------------------------------------------------------------------------------------------------
     // SET REQUEST
-    private function setRequest(string $method, string $urlPattern, callable|null $callback)
+    private function setRequest(string $method, string | array $urlPatterns, callable|null $callback)
     {
-        $this->setRoute($urlPattern, strtoupper($method));
-
-        if ($this->isValidRequestUri($urlPattern, strtoupper($method))) :
-            $requestUri = $this->getRequestUri();
-            $args = $this->getRequestUriArgs($urlPattern, $requestUri);
-            $params = array();
-            $callback($args, $params);
+        if (is_string($urlPatterns)) :
+            $urlPatterns = array($urlPatterns);
         endif;
+
+        foreach ($urlPatterns as $key => $urlPattern) :
+            $this->setRoute($urlPattern, strtoupper($method));
+
+            if ($this->isValidRequestUri($urlPattern, strtoupper($method))) :
+                $requestUri = $this->getRequestUri();
+                $args = $this->getRequestUriArgs($urlPattern, $requestUri);
+                $args["urlIndex"] = $key;
+                $urlIndex =  $key;
+                $callback($args, $urlIndex);
+            endif;
+        endforeach;
     }
 
     // ------------------------------------------------------------------------------------------------
