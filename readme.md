@@ -133,6 +133,14 @@ $router->set(array("GET", "POST"), "/", function () {
 });
 ```
 
+#### Add array of routes to a request
+
+```php
+$router->get(["/hello","/hi"], function () {
+    // Put the code to run
+});
+```
+
 #### Method not allowed
 
 ```php
